@@ -49,7 +49,7 @@ This project is very new, and I would not recommend using it in any production e
 
 ### Future ideas:
 - Supporting more than just scrubbing `String`
-- Allowing the `Scrubber` class to accept a class that overrides the default override value (Currently "****") 
+- Allowing the `Scrubber` class to accept an interface that overrides the default override value (Currently "****") 
 - Supporting custom objects outside the Kotlin standard library
 
 If you have any more ideas, I'd love to [hear them.](https://github.com/HaydenMeloche/scrubber/issues)
