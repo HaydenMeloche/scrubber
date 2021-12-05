@@ -1,3 +1,5 @@
+package dev.meloche
+
 import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.processing.Dependencies
 import com.google.devtools.ksp.symbol.KSClassDeclaration
@@ -11,20 +13,35 @@ import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.TypeVariableName
 import com.squareup.kotlinpoet.ksp.KotlinPoetKspPreview
 import com.squareup.kotlinpoet.ksp.toClassName
+import kotlin.reflect.KClass
 
 object Generator {
 
     @OptIn(KotlinPoetKspPreview::class)
     fun writeScrubber(allProperties: Set<KSPropertyDeclaration>, codeGenerator: CodeGenerator) {
-        val pack = "com.scrubber"
+        val pack = "dev.meloche.scrubber"
 
         val fileName = "Scrubber"
         val fileBuilder = FileSpec.builder(pack, fileName)
-        val classBuilder = TypeSpec.classBuilder(fileName)
+        fileBuilder.addImport("dev.meloche", "NullScrubProcessor")
+        val classBuilder = TypeSpec.classBuilder(fileName).primaryConstructor(
+            FunSpec.constructorBuilder()
+                .addStatement("this.scrubbingProcessor = NullScrubProcessor()")
+                .build()
+        )
+
+
+        classBuilder.addProperty(
+            PropertySpec.builder("scrubbingProcessor", CustomScubProcessor::class, KModifier.PRIVATE).mutable(true).build()
+        )
+
+        classBuilder.addFunction(
+            FunSpec.builder("Scrubber").addParameter("customScrubber", CustomScubProcessor::class).addStatement("scrubbingProcessor = customScrubber").build()
+        )
 
         // setup set of fields
         var scrubbedFields = ""
-        allProperties.filter { it.type.toString() == "String" }.forEach {
+        allProperties.forEach {
             scrubbedFields += "\"${it}\","
         }
         scrubbedFields = scrubbedFields.dropLast(1)
@@ -53,14 +70,14 @@ object Generator {
                     var copyFields = ""
                     allProperties.filter { property -> property.parentDeclaration == it && property.type.toString() == "String" }
                         .forEach { property ->
-                            copyFields += "$property = \"****\"," //TODO set value depending on type
+                            copyFields += "$property = scrubbingProcessor.getValue(obj.$property, ${property.type}::class),"
                         }
                     copyFields = copyFields.dropLast(1)
                     funSpec.addStatement("return obj.copy($copyFields)")
                 } else {
                     allProperties.filter { property -> property.parentDeclaration == it }
                         .forEach { property ->
-                            funSpec.addStatement("obj.$property = \"****\"") //TODO set value depending on type
+                            funSpec.addStatement("obj.$property = scrubbingProcessor.getValue(obj.$property, ${property.type}::class)")
                         }
                     funSpec.addStatement("return obj")
                 }
@@ -88,5 +105,9 @@ object Generator {
             codeGenerator.createNewFile(Dependencies(true), "dev.meloche.scrubber", "Scrubber")
         output.write(file.toString().toByteArray())
         output.close()
+    }
+
+    fun test(clazz: KClass<*>): Unit {
+
     }
 }

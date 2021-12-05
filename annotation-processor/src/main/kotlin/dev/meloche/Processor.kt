@@ -1,3 +1,5 @@
+package dev.meloche
+
 import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
@@ -19,7 +21,7 @@ class Processor(
     val allProperties = mutableSetOf<KSPropertyDeclaration>()
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        val symbols = resolver.getSymbolsWithAnnotation("com.example.annotation.Scrub")
+        val symbols = resolver.getSymbolsWithAnnotation("dev.meloche.Scrub")
         val ret = symbols.filter { !it.validate() }.toList()
         symbols
             .filter { it is KSClassDeclaration || it is KSPropertyDeclaration && it.validate() }

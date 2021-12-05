@@ -2,9 +2,10 @@ val kspVersion: String by project
 
 plugins {
     kotlin("jvm")
+    `maven-publish`
 }
 
-group = "com.example"
+group = "dev.meloche"
 version = "1.0-SNAPSHOT"
 
 repositories {
@@ -21,4 +22,19 @@ dependencies {
 sourceSets.main {
     java.srcDirs("src/main/kotlin")
 }
+
+
+
+publishing {
+    publications {
+        create<MavenPublication>("maven") {
+            groupId = "dev.meloche"
+            artifactId = "scrubber"
+            version = "1.0"
+
+            from(components["kotlin"])
+        }
+    }
+}
+
 
